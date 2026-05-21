@@ -33,8 +33,8 @@ After installing:
 2. Select **Antigravity Editor** from the dropdown.
 3. Click **Regenerate project files**.
 
-<img src="https://raw.githubusercontent.com/sjhdeux0114/UnityForAntigravityIDE/main/Documentation~/Images/antigravity-setup.png" width="600" alt="Antigravity Setup">
-<img src="https://raw.githubusercontent.com/sjhdeux0114/UnityForAntigravityIDE/main/Documentation~/Images/antigravity-preview.png" width="600" alt="Antigravity Code Preview">
+<img src="https://raw.githubusercontent.com/TermWay/unity-ide-antigravity/main/Documentation~/Images/antigravity-setup.png" width="600" alt="Antigravity Setup">
+<img src="https://raw.githubusercontent.com/TermWay/unity-ide-antigravity/main/Documentation~/Images/antigravity-preview.png" width="600" alt="Antigravity Code Preview">
 
 ## License
 
