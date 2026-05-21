@@ -159,6 +159,58 @@ namespace Antigravity.Editor // <--- NEW NAMESPACE
             m_ProjectGeneration.Sync();
         }
 
+        static string NormalizePath(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return "";
+            try
+            {
+                path = Path.GetFullPath(path);
+            }
+            catch (Exception)
+            {
+                // Fallback in case of invalid characters
+            }
+            path = path.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
+            if (path.Length >= 2 && path[1] == ':')
+            {
+                path = char.ToLowerInvariant(path[0]) + path.Substring(1);
+            }
+            return path;
+        }
+
+        static string GetArgumentsForPath(string template, string projectPath, string filePath, int line, int column)
+        {
+            if (string.IsNullOrEmpty(filePath))
+            {
+                string cleanedTemplate = template;
+                
+                // Strip the -g flag and following file/line/column placeholders
+                cleanedTemplate = System.Text.RegularExpressions.Regex.Replace(
+                    cleanedTemplate,
+                    @"\s*-g\s+""?\$\(File\)""?(?::\$\(Line\))?(?::\$\(Column\))?",
+                    "",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase
+                );
+
+                cleanedTemplate = cleanedTemplate
+                    .Replace("$(File)", "")
+                    .Replace("$(Line)", "")
+                    .Replace("$(Column)", "");
+
+                cleanedTemplate = cleanedTemplate.Replace("$(ProjectPath)", projectPath);
+                return cleanedTemplate.Trim();
+            }
+            else
+            {
+                string result = template;
+                result = result.Replace("$(ProjectPath)", projectPath);
+                result = result.Replace("$(File)", filePath);
+                result = result.Replace("$(Line)", line.ToString());
+                result = result.Replace("$(Column)", column.ToString());
+                return result;
+            }
+        }
+
         public bool OpenProject(string path, int line, int column)
         {
             if (path != "" && (!SupportsExtension(path) || !File.Exists(path)))
@@ -169,21 +221,15 @@ namespace Antigravity.Editor // <--- NEW NAMESPACE
             if (line == -1) line = 1;
             if (column == -1) column = 0;
 
-            string arguments;
-            if (Arguments != DefaultArgument)
+            string projectDir = NormalizePath(m_ProjectGeneration.ProjectDirectory);
+            string fileTarget = string.IsNullOrEmpty(path) ? "" : NormalizePath(path);
+
+            if (fileTarget.Equals(projectDir, StringComparison.OrdinalIgnoreCase))
             {
-                arguments = m_ProjectGeneration.ProjectDirectory != path
-                    ? CodeEditor.ParseArgument(Arguments, path, line, column)
-                    : m_ProjectGeneration.ProjectDirectory;
+                fileTarget = "";
             }
-            else
-            {
-                arguments = $@"""{m_ProjectGeneration.ProjectDirectory}""";
-                if (m_ProjectGeneration.ProjectDirectory != path && path.Length != 0)
-                {
-                    arguments += $@" -g ""{path}"":{line}:{column}";
-                }
-            }
+
+            string arguments = GetArgumentsForPath(Arguments, projectDir, fileTarget, line, column);
 
             if (IsOSX) return OpenOSX(arguments);
 
